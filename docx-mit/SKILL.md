@@ -171,26 +171,61 @@ pie.add_run("Página ")
 numero_de_pagina(pie)
 ```
 
-### Índice / tabla de contenido (campo TOC)
-python-docx no rellena el índice; se inserta el campo y Word lo genera al abrir el
-documento (clic derecho → "Actualizar campo", o F9). Requiere que los encabezados usen
-`add_heading(..., level=1/2/3)`.
+### Índice / tabla de contenido (que se arma SOLO, sin F9 manual)
+
+python-docx no calcula números de página (eso lo hace el motor de Word/LibreOffice). Para
+que el índice **quede armado sin pedirle F9 al usuario**, haz DOS cosas:
+
+1. Inserta el campo TOC y marca el documento para **actualizar campos al abrir**
+   (`updateFields=true`): así Word rellena el índice automáticamente al abrirlo.
+2. **Rellénalo de una vez** con `actualizar_indice.py` (usa LibreOffice o Word) para que el
+   `.docx` se entregue con el índice ya poblado y estático — es lo ideal para enviar el archivo.
+
+Los encabezados deben usar `add_heading(..., level=1/2/3)` para que el índice los recoja.
+NO pongas un salto de página con `add_page_break()` antes del índice: usa
+`page_break_before` (ver "Saltos de página") para no dejar una página en blanco.
+
 ```python
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-def insertar_toc(doc):
+def insertar_indice(doc, titulo="Índice"):
+    # El TÍTULO del índice NO debe ser Heading1/2/3: si lo fuera, aparecería listado dentro
+    # del propio índice. Se formatea como párrafo normal en negrita.
+    tp = doc.add_paragraph()
+    tp.paragraph_format.page_break_before = True       # el índice empieza en página nueva, sin hoja en blanco
+    tp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r = tp.add_run(titulo); r.bold = True; r.font.size = Pt(16)
     p = doc.add_paragraph()
     run = p.add_run()
     b = OxmlElement("w:fldChar"); b.set(qn("w:fldCharType"), "begin")
     instr = OxmlElement("w:instrText"); instr.set(qn("xml:space"), "preserve")
     instr.text = 'TOC \\o "1-3" \\h \\z \\u'
     sep = OxmlElement("w:fldChar"); sep.set(qn("w:fldCharType"), "separate")
-    txt = OxmlElement("w:t"); txt.text = "Actualiza el índice con F9 en Word."
+    txt = OxmlElement("w:t"); txt.text = "Tabla de contenido"   # se reemplaza al rellenar; sin mensajes de F9
     e = OxmlElement("w:fldChar"); e.set(qn("w:fldCharType"), "end")
     for el in (b, instr, sep, txt, e):
         run._r.append(el)
+
+def marcar_actualizar_campos(doc):
+    """Hace que Word/LibreOffice actualicen el índice y los números de página al ABRIR."""
+    settings = doc.settings.element
+    if settings.find(qn("w:updateFields")) is None:
+        el = OxmlElement("w:updateFields"); el.set(qn("w:val"), "true")
+        settings.insert(0, el)
+
+# Al construir el documento:
+insertar_indice(doc)          # colócalo tras la portada, antes del contenido
+marcar_actualizar_campos(doc)
+doc.save("salida.docx")
 ```
+
+Luego, para dejar el índice **ya relleno** en el archivo (recomendado antes de entregar):
+```bash
+python -X utf8 "$SKILL_DIR/scripts/actualizar_indice.py" salida.docx
+```
+Usa LibreOffice si está, o Word (COM) en Windows. Deja el índice y los números de página
+calculados y estáticos. **Cierra el .docx en Word antes de correrlo** (no puede estar abierto).
 
 ### Referencias / bibliografía en APA (sangría francesa)
 Cada referencia es un párrafo con **sangría francesa** (la 1.ª línea al margen, el resto
@@ -269,12 +304,14 @@ No entregues un documento sin haber hecho esta pasada.
 | `validar_docx.py` | validación práctica (ZIP/XML/partes + python-docx) |
 | `revisar_ortografia.py` | señala posibles faltas ortográficas y muestra el texto |
 | `arreglar_saltos.py` | quita páginas en blanco por saltos de página en párrafos vacíos |
+| `actualizar_indice.py` | rellena el índice/TOC y los números de página (Word o LibreOffice) |
 
 ## Dependencias (en esta máquina)
 
 - **python-docx** ✅ — crear, leer, editar
-- **lxml** ✅ — usado por python-docx y por `validar_docx.py`
-- **LibreOffice** ⚠️ NO instalado — opcional (convertir a PDF/imágenes con `soffice`)
+- **lxml** ✅ — usado por python-docx, `validar_docx.py` y `arreglar_saltos.py`
+- **Microsoft Word** ✅ (Windows) — usado por `actualizar_indice.py` (COM) para rellenar el índice
+- **LibreOffice** ⚠️ NO instalado — opcional (alternativa para `actualizar_indice.py`; PDF/imágenes)
 
 > **Licencia: MIT (ver `LICENSE`).** Skill **independiente**: los scripts y esta guía son
 > implementación y redacción propias, sobre la librería **python-docx** (MIT) y el estándar
