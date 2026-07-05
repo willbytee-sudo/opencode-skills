@@ -1,5 +1,12 @@
 # opencode-skills
 
+> [!IMPORTANT]
+> **Esto solo hace falta si usas [opencode](https://opencode.ai).**
+> opencode no trae skills integradas para documentos, por eso estas son adaptaciones hechas para él.
+> Si trabajas en **Claude Code, Codex, Antigravity** u otro asistente que ya incluye sus propias skills
+> de Office (Word, PDF, PowerPoint, Excel) y un creador de skills, **no necesitas este repo**: usa las que
+> ya vienen con tu herramienta. Clónalo únicamente si tu entorno es opencode.
+
 Skills para [opencode](https://opencode.ai) en Windows, en español. Cada skill vive en su
 carpeta con un `SKILL.md` y sus recursos, y **cada una tiene su propia licencia** (ver la
 sección "Licencias" más abajo).
