@@ -122,10 +122,25 @@ doc.add_picture("grafico.png", width=Inches(5))
 doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
 ```
 
-### Saltos de página
+### Saltos de página (⚠️ evita la página en blanco)
+Para **empezar una sección en página nueva** (portada → índice, índice → contenido, inicio
+de capítulo) usa `page_break_before` en el PRIMER párrafo de la sección, NO `add_page_break()`:
 ```python
-doc.add_page_break()
+h = doc.add_heading("Índice", level=1)
+h.paragraph_format.page_break_before = True     # ✅ salto limpio, sin página en blanco
 ```
+**Por qué:** `doc.add_page_break()` crea un párrafo VACÍO que solo contiene el salto. Si la
+página anterior queda casi llena, esa línea vacía se desborda a la página siguiente y el
+salto brinca otra vez → aparece una **página en blanco** de más. `page_break_before` no
+añade párrafo vacío, así que nunca genera esa página fantasma.
+```python
+doc.add_page_break()   # ⚠️ solo para un corte dentro del MISMO flujo de texto; para
+                       # cambiar de sección prefiere page_break_before (arriba)
+```
+**Portada:** no apiles decenas de párrafos vacíos para centrar; usa `space_before` en el
+primer bloque o unos pocos `add_paragraph()`, y cierra la portada con `page_break_before`
+en el índice. Verifica el conteo de páginas si puedes (LibreOffice/Word) para descartar
+páginas en blanco.
 
 ### Alineación e interlineado
 ```python
@@ -253,6 +268,7 @@ No entregues un documento sin haber hecho esta pasada.
 | `extraer_texto.py` | vuelca el texto (párrafos + tablas) |
 | `validar_docx.py` | validación práctica (ZIP/XML/partes + python-docx) |
 | `revisar_ortografia.py` | señala posibles faltas ortográficas y muestra el texto |
+| `arreglar_saltos.py` | quita páginas en blanco por saltos de página en párrafos vacíos |
 
 ## Dependencias (en esta máquina)
 
