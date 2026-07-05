@@ -1,9 +1,24 @@
 # opencode-skills
 
-Skills para [opencode](https://opencode.ai) en Windows, en español. Cada skill vive en
-su carpeta con un `SKILL.md` y sus recursos.
+Skills para [opencode](https://opencode.ai) en Windows, en español. Cada skill vive en su
+carpeta con un `SKILL.md` y sus recursos, y **cada una tiene su propia licencia** (ver la
+sección "Licencias" más abajo).
 
-## Contenido
+## Skills MIT (documentos)
+
+Implementaciones **independientes** para trabajar documentos, escritas desde cero sobre
+librerías públicas de Python y el estándar abierto OOXML. Cada una incluye un paso de
+**revisión ortográfica** que le muestra al modelo posibles faltas (tildes, mojibake tipo
+`posiciAn`, terminaciones `-ción`/`-sión`/`-tión`) antes de entregar.
+
+| Skill | Qué hace | Basada en | Licencia |
+|-------|----------|-----------|----------|
+| [`docx-mit`](docx-mit/) | Crear/leer/editar Word (.docx) | python-docx | MIT |
+| [`pdf-mit`](pdf-mit/) | Leer/crear/editar PDF, formularios, imágenes | pypdf · reportlab · pdfplumber · PyMuPDF · pikepdf | MIT |
+| [`pptx-mit`](pptx-mit/) | Crear/leer/editar presentaciones (.pptx) | python-pptx | MIT |
+| [`xlsx-mit`](xlsx-mit/) | Crear/leer/editar hojas de cálculo (.xlsx) | openpyxl | MIT |
+
+## Otras skills
 
 | Skill | Qué hace | Licencia |
 |-------|----------|----------|
@@ -14,29 +29,44 @@ su carpeta con un `SKILL.md` y sus recursos.
 Copia la carpeta de la skill a la ruta de skills de opencode y reinicia opencode:
 
 ```bash
-# Windows
-cp -r skill-creator-opencode "$HOME/.config/opencode/skills/"
-# (ruta final: C:\Users\<usuario>\.config\opencode\skills\skill-creator-opencode\)
+cp -r docx-mit "$HOME/.config/opencode/skills/"
+# (ruta final en Windows: C:\Users\<usuario>\.config\opencode\skills\docx-mit\)
 ```
 
-Los scripts se corren SIEMPRE con `python -X utf8` (en Windows la consola cp1252
-corrompe los acentos si no).
+Los scripts se corren **siempre** con `python -X utf8` (en Windows la consola cp1252
+corrompe los acentos si no). Algunas skills piden dependencias extra que se indican en su
+`SKILL.md` (por ejemplo `pip install python-pptx` para `pptx-mit`).
 
-## Licencias y atribución
+## Revisión ortográfica
+
+Cada skill MIT trae `scripts/revisar_ortografia.py`: extrae el texto del documento y
+**señala sospechosos** para el español (palabras que sin tilde no existen, terminaciones
+`consonante+ion` que deberían llevar tilde, y mojibake de codificación), respetando los
+plurales (`funciones`), `guion` y las palabras ya acentuadas. Luego imprime el texto completo
+para que el modelo lea el resto en busca de faltas que la heurística no detecta.
+
+## Licencias
+
+Este repositorio usa **licencias por carpeta**:
+
+- **`docx-mit`, `pdf-mit`, `pptx-mit`, `xlsx-mit` — MIT.** Implementación y redacción
+  propias sobre librerías de terceros de licencia permisiva (python-docx, pypdf, reportlab,
+  pdfplumber, pikepdf, python-pptx, openpyxl) y el estándar abierto **OOXML (ECMA-376 /
+  ISO/IEC 29500)**. **No** derivan de skills propietarias de terceros. La licencia MIT de la
+  raíz aplica a estas skills, al README y al andamiaje del repo.
+  > Nota: `pdf-mit` y `pptx-mit` incluyen un script opcional que usa **PyMuPDF (fitz)**,
+  > que es AGPL-3.0. Solo se usa para renderizar a imagen; para redistribución propietaria,
+  > sustitúyelo por `pypdfium2` (Apache/BSD) o Poppler. El resto es de licencia permisiva.
 
 - **`skill-creator-opencode` — Apache License 2.0.** Es una **obra derivada** de la skill
-  [`skill-creator`](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
-  de **Anthropic, PBC** (Apache-2.0). Fue traducida al español, adaptada al entorno
-  opencode/Windows, reescrita para no depender de PyYAML y con el harness automático de
-  evals reemplazado por un flujo manual. Ver los archivos `LICENSE` y `NOTICE` de la
-  carpeta para el detalle de cambios y la atribución completa.
+  [`skill-creator`](https://github.com/anthropics/skills/tree/main/skills/skill-creator) de
+  **Anthropic, PBC** (Apache-2.0), traducida y adaptada. Su carpeta contiene su propia
+  `LICENSE` (Apache-2.0) y un `NOTICE` con la atribución y la lista de cambios, que rigen esa
+  skill.
 
-> **Nota sobre otras skills de documentos (docx / pdf / pptx / xlsx):**
-> las skills oficiales de Anthropic para Word, PDF, PowerPoint y Excel son
-> **propietarias** ("source-available, no open source": prohíben crear obras derivadas y
-> redistribuir). Por eso **no** se incluyen aquí adaptaciones de ellas: hacerlo violaría su
-> licencia. Solo se publica material derivado de skills con licencia permisiva (Apache-2.0).
+> Las skills oficiales de Anthropic para Word, PDF, PowerPoint y Excel son **propietarias**
+> (prohíben derivar y redistribuir); por eso las `-mit` de este repo se escribieron de forma
+> independiente y **no** son adaptaciones de ellas.
 
 "Anthropic" y "Claude" son marcas de Anthropic, PBC. Este proyecto no está afiliado a
-Anthropic ni cuenta con su respaldo; el nombre se usa solo para describir el origen del
-material derivado.
+Anthropic ni cuenta con su respaldo.
