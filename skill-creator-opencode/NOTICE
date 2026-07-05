@@ -1,0 +1,26 @@
+skill-creator-opencode
+Copyright 2026 Israel Mosquera
+
+This work is a derivative of the "skill-creator" Agent Skill:
+    Copyright 2025 Anthropic, PBC.
+    Licensed under the Apache License, Version 2.0.
+    Source: https://github.com/anthropics/skills (skills/skill-creator)
+
+Licensed under the Apache License, Version 2.0 (see the LICENSE file).
+
+Modifications made by Israel Mosquera in 2026 (per Apache-2.0 section 4(b)):
+  - Translated and adapted the guidance to Spanish for the opencode runtime on
+    Windows (SKILL.md, references/schemas.md).
+  - Rewrote the validation/packaging scripts to remove the PyYAML dependency,
+    using a custom frontmatter parser (scripts/utils.py).
+  - Added scripts/init_skill.py to scaffold new opencode skills.
+  - Replaced the automated Claude Code eval/benchmark harness (run_eval.py,
+    run_loop.py, aggregate_benchmark.py, generate_report.py, the eval viewer and
+    grader/comparator/analyzer agents) — which depends on the `claude -p` CLI and
+    Claude Code subagents — with a documented manual testing workflow for opencode.
+  - Adjusted skill install paths and packaging for opencode
+    (~/.config/opencode/skills/).
+
+Trademarks: "Anthropic" and "Claude" are trademarks of Anthropic, PBC. This
+project is not affiliated with or endorsed by Anthropic; the name is used only to
+describe the origin of the derived material.
