@@ -11,19 +11,23 @@ Skills para [opencode](https://opencode.ai) en Windows, en español. Cada skill 
 carpeta con un `SKILL.md` y sus recursos, y **cada una tiene su propia licencia** (ver la
 sección "Licencias" más abajo).
 
-## Skills MIT (documentos)
+## Skills MIT (documentos) — español + inglés
 
 Implementaciones **independientes** para trabajar documentos, escritas desde cero sobre
 librerías públicas de Python y el estándar abierto OOXML. Cada una incluye un paso de
 **revisión ortográfica** que le muestra al modelo posibles faltas (tildes, mojibake tipo
-`posiciAn`, terminaciones `-ción`/`-sión`/`-tión`) antes de entregar.
+`posiciAn`, terminaciones `-ción`/`-sión`/`-tión`) antes de entregar. Cada skill tiene su
+versión en **español** (`-mit`) y en **inglés** (`-mit-en`).
 
-| Skill | Qué hace | Basada en | Licencia |
-|-------|----------|-----------|----------|
-| [`docx-mit`](docx-mit/) | Crear/leer/editar Word (.docx) | python-docx | MIT |
-| [`pdf-mit`](pdf-mit/) | Leer/crear/editar PDF, formularios, imágenes | pypdf · reportlab · pdfplumber · PyMuPDF · pikepdf | MIT |
-| [`pptx-mit`](pptx-mit/) | Crear/leer/editar presentaciones (.pptx) | python-pptx | MIT |
-| [`xlsx-mit`](xlsx-mit/) | Crear/leer/editar hojas de cálculo (.xlsx) | openpyxl | MIT |
+*Independent, from-scratch document skills on top of public Python libraries + the open OOXML
+standard, each with a built-in proofreading step. Available in **Spanish** (`-mit`) and **English** (`-mit-en`).*
+
+| Propósito / Purpose | Español | Inglés / English | Basada en / Based on | Licencia |
+|---------------------|---------|------------------|----------------------|----------|
+| Word (.docx) | [`docx-mit`](docx-mit/) | [`docx-mit-en`](docx-mit-en/) | python-docx | MIT |
+| PDF | [`pdf-mit`](pdf-mit/) | [`pdf-mit-en`](pdf-mit-en/) | pypdf · reportlab · pdfplumber · PyMuPDF · pikepdf | MIT |
+| PowerPoint (.pptx) | [`pptx-mit`](pptx-mit/) | [`pptx-mit-en`](pptx-mit-en/) | python-pptx | MIT |
+| Excel (.xlsx) | [`xlsx-mit`](xlsx-mit/) | [`xlsx-mit-en`](xlsx-mit-en/) | openpyxl | MIT |
 
 ## Otras skills
 
@@ -46,11 +50,13 @@ corrompe los acentos si no). Algunas skills piden dependencias extra que se indi
 
 ## Revisión ortográfica
 
-Cada skill MIT trae `scripts/revisar_ortografia.py`: extrae el texto del documento y
-**señala sospechosos** para el español (palabras que sin tilde no existen, terminaciones
-`consonante+ion` que deberían llevar tilde, y mojibake de codificación), respetando los
-plurales (`funciones`), `guion` y las palabras ya acentuadas. Luego imprime el texto completo
-para que el modelo lea el resto en busca de faltas que la heurística no detecta.
+Cada skill MIT trae un revisor: `scripts/revisar_ortografia.py` (versión en español) o
+`scripts/spellcheck.py` (versión en inglés). Extrae el texto del documento y **señala
+sospechosos** —en español: palabras que sin tilde no existen, terminaciones `consonante+ion`
+que deberían llevar tilde y mojibake, respetando plurales (`funciones`), `guion` y lo ya
+acentuado; en inglés: mojibake, palabras duplicadas y espacio antes de puntuación— y luego
+imprime el texto completo para que el modelo lea el resto en busca de faltas que la heurística
+no detecta.
 
 ## Licencias
 
