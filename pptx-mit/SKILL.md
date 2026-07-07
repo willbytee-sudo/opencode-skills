@@ -1,187 +1,162 @@
 ---
 name: pptx-mit
 description: >-
-  Úsala SIEMPRE que haya un .pptx de por medio: crear presentaciones / mazos de
-  diapositivas, leer o extraer su texto, o editar presentaciones existentes. Construye las
-  presentaciones con la librería python-pptx. Pensada para español (acentos á é í ó ú ñ
-  intactos) sobre opencode en Windows, con revisión ortográfica antes de entregar. Dispara
-  con "diapositivas", "presentación", "deck", "slides" o un nombre .pptx. NO usar para Word,
-  Excel ni PDF.
+  Use ALWAYS when a .pptx is involved: creating presentations / slide decks, reading or
+  extracting their text, or editing existing presentations. Builds presentations with the
+  python-pptx library. Designed for opencode on Windows, with a proofread step before
+  delivering. Triggers: "slides", "presentation", "deck", or a .pptx filename. Do NOT use for
+  Word, Excel, or PDF.
 metadata:
-  origen: skill independiente (implementación propia, MIT) basada en la librería python-pptx (MIT) y el estándar abierto OOXML (ISO/IEC 29500). No deriva de skills propietarias de terceros.
-  entorno: opencode en Windows — Python 3.13 + python-pptx (pip) + PyMuPDF; LibreOffice opcional
-  licencia: MIT (ver LICENSE)
-  regla_critica: correr TODOS los scripts con "python -X utf8"; revisar ortografía antes de entregar
+  origin: independent skill (own implementation, MIT) based on the python-pptx library (MIT) and the open OOXML standard (ISO/IEC 29500). Not derived from any proprietary third-party skill.
+  environment: opencode on Windows — Python 3.13 + python-pptx (pip) + PyMuPDF; LibreOffice optional
+  license: MIT (see LICENSE)
+  critical_rule: run ALL scripts with "python -X utf8"; proofread before delivering
 ---
 
-# PowerPoint (.pptx) en opencode — crear, leer, editar (python-pptx)
+# PowerPoint (.pptx) on opencode — create, read, edit (python-pptx)
 
 ## Overview
 
-Esta skill crea y edita presentaciones con **python-pptx** (la librería estándar de Python
-para `.pptx`, licencia MIT). El modelo escribe un script de Python que arma la presentación;
-la lectura de texto se hace sin dependencias (leyendo el ZIP). Al terminar, **revisa la
-ortografía** antes de entregar.
+This skill creates and edits presentations with **python-pptx** (the standard Python library
+for `.pptx`, MIT). Text reading needs no dependencies (it reads the ZIP). When done, **proofread**
+before delivering.
 
-> **Instala python-pptx** (no viene por defecto en esta máquina): `pip install python-pptx`.
-> Los scripts de lectura (`extraer_texto.py`, `revisar_ortografia.py`) NO lo necesitan.
+> **Install python-pptx** (not present by default here): `pip install python-pptx`. The reading
+> scripts (`extract_text.py`, `spellcheck.py`) do NOT need it.
 
-## Cómo opencode ejecuta esta skill (adaptaciones clave — LEER PRIMERO)
+## How opencode runs this skill (key adaptations — READ FIRST)
 
-1. **`SKILL_DIR` con ruta absoluta.** opencode corre desde el directorio del proyecto:
+1. **`SKILL_DIR` as an absolute path.** opencode runs from the project directory:
    ```bash
    SKILL_DIR="$HOME/.config/opencode/skills/pptx-mit"
    ```
-2. **REGLA UTF-8: corre Python con `-X utf8` SIEMPRE.** Sin ella, los acentos se rompen (cp1252).
-3. **El texto con acentos NUNCA viaja por la consola.** El `.py` que arma la presentación se
-   escribe con la herramienta de archivos (UTF-8), no con echo/Set-Content/heredocs.
-4. **`extract-text` del sandbox NO existe.** Usa `extraer_texto.py`.
-5. **QA visual = LibreOffice (opcional, NO instalado).** `render_diapositivas.py` usa
-   LibreOffice + PyMuPDF (sin Poppler). Sin LibreOffice, haz QA de texto con `extraer_texto.py`.
+2. **UTF-8 RULE: run Python with `-X utf8` ALWAYS.** Without it, non-ASCII text breaks on Windows (cp1252).
+3. **Text NEVER travels through the console.** The `.py` that builds the deck is written with the
+   file tool (UTF-8), not with echo/Set-Content/here-strings.
+4. **The sandbox `extract-text` does NOT exist.** Use `extract_text.py`.
+5. **Visual QA = LibreOffice (optional, NOT installed).** `render_slides.py` uses LibreOffice +
+   PyMuPDF (no Poppler). Without LibreOffice, do text QA with `extract_text.py`.
 
-## Leer / extraer texto
+## Read / extract text
 
 ```bash
-python -X utf8 "$SKILL_DIR/scripts/extraer_texto.py" presentacion.pptx
+python -X utf8 "$SKILL_DIR/scripts/extract_text.py" presentation.pptx
 ```
 
-## Crear una presentación (python-pptx)
+## Create a presentation (python-pptx)
 
-Escribe el `.py` con la herramienta de archivos y córrelo con `python -X utf8`.
-
+Write the `.py` with the file tool and run it with `python -X utf8`.
 ```python
 from pptx import Presentation
-from pptx.util import Inches, Pt, Emu
+from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
 
 prs = Presentation()
 prs.slide_width  = Inches(13.333)   # 16:9
 prs.slide_height = Inches(7.5)
+BLANK = prs.slide_layouts[6]        # blank layout (full control)
 
-BLANK = prs.slide_layouts[6]        # layout en blanco (control total)
-
-# --- Diapositiva de portada ---
+# Cover slide
 s = prs.slides.add_slide(BLANK)
-s.background.fill.solid()
-s.background.fill.fore_color.rgb = RGBColor(0x1E, 0x27, 0x61)   # fondo oscuro
-caja = s.shapes.add_textbox(Inches(1), Inches(2.6), Inches(11), Inches(2))
-tf = caja.text_frame; tf.word_wrap = True
-p = tf.paragraphs[0]; p.text = "Informe de gestión 2024"
+s.background.fill.solid(); s.background.fill.fore_color.rgb = RGBColor(0x1E, 0x27, 0x61)
+box = s.shapes.add_textbox(Inches(1), Inches(2.6), Inches(11), Inches(2))
+tf = box.text_frame; tf.word_wrap = True
+p = tf.paragraphs[0]; p.text = "Management report 2024"
 p.font.size = Pt(44); p.font.bold = True; p.font.name = "Arial"
 p.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
 
-# --- Diapositiva de contenido ---
+# Content slide
 s = prs.slides.add_slide(BLANK)
 t = s.shapes.add_textbox(Inches(0.7), Inches(0.5), Inches(12), Inches(1))
-tp = t.text_frame.paragraphs[0]; tp.text = "Resultados"
-tp.font.size = Pt(32); tp.font.bold = True
-cuerpo = s.shapes.add_textbox(Inches(0.7), Inches(1.8), Inches(7), Inches(4)).text_frame
-cuerpo.word_wrap = True
-for i, linea in enumerate(["Los ingresos crecieron 15%.", "La región costa lideró.", "Sin errores de conciliación."]):
-    par = cuerpo.paragraphs[0] if i == 0 else cuerpo.add_paragraph()
-    par.text = "•  " + linea         # viñeta manual simple, o usa numeración del layout
-    par.font.size = Pt(18)
+tp = t.text_frame.paragraphs[0]; tp.text = "Results"; tp.font.size = Pt(32); tp.font.bold = True
+body = s.shapes.add_textbox(Inches(0.7), Inches(1.8), Inches(7), Inches(4)).text_frame
+body.word_wrap = True
+for i, line in enumerate(["Revenue grew 15%.", "The coast region led.", "No reconciliation errors."]):
+    par = body.paragraphs[0] if i == 0 else body.add_paragraph()
+    par.text = "•  " + line; par.font.size = Pt(18)
 
-prs.save("salida.pptx")
+prs.save("output.pptx")
 ```
 
-### Formas, tablas, imágenes, gráficos y notas
+### Shapes, tables, images, charts, notes
 ```python
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.chart.data import CategoryChartData
 from pptx.enum.chart import XL_CHART_TYPE
 
-# Forma con relleno y sombra suave
 rect = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(8), Inches(1.8), Inches(4), Inches(2.2))
 rect.fill.solid(); rect.fill.fore_color.rgb = RGBColor(0xF0, 0xF9, 0xFB)
-rect.line.color.rgb = RGBColor(0xCC, 0xCC, 0xCC)
 
-# Tabla
 tab = s.shapes.add_table(2, 2, Inches(0.7), Inches(4.2), Inches(6), Inches(1.2)).table
-tab.cell(0, 0).text, tab.cell(0, 1).text = "Año", "Ingresos"
-tab.cell(1, 0).text, tab.cell(1, 1).text = "2024", "$1 234"
+tab.cell(0, 0).text, tab.cell(0, 1).text = "Year", "Revenue"
+tab.cell(1, 0).text, tab.cell(1, 1).text = "2024", "$1,234"
 
-# Imagen (mantén proporción calculando el alto)
-s.shapes.add_picture("grafico.png", Inches(8), Inches(4.2), height=Inches(2.5))
+s.shapes.add_picture("chart.png", Inches(8), Inches(4.2), height=Inches(2.5))
 
-# Gráfico nativo (editable en PowerPoint) — no lo conviertas a imagen
-datos = CategoryChartData()
-datos.categories = ["Q1", "Q2", "Q3", "Q4"]
-datos.add_series("Ventas", (4.5, 5.5, 6.2, 7.1))
-s.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(0.7), Inches(1.8), Inches(6), Inches(3.5), datos)
+data = CategoryChartData()
+data.categories = ["Q1", "Q2", "Q3", "Q4"]; data.add_series("Sales", (4.5, 5.5, 6.2, 7.1))
+s.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(0.7), Inches(1.8), Inches(6), Inches(3.5), data)
 
-# Notas del orador
-s.notes_slide.notes_text_frame.text = "Abrir con el titular de ingresos. Pausar tras el 15%."
+s.notes_slide.notes_text_frame.text = "Open with the revenue headline. Pause after 15%."
 ```
 
-## Diseño (principios generales, no reglas rígidas)
+## Design (general principles, not rigid rules)
 
-Estos son criterios de diseño de uso común; adáptalos al tema:
+- **One idea per slide.** Clear title + one visual (image, chart, icon, or shape). Avoid text-only slides.
+- **Hierarchy by size:** title 36–44 pt, subheads 20–24 pt, body 14–18 pt.
+- **Real contrast:** dark text on light or light on dark; dark backgrounds look good for cover/closing.
+- **Intentional palette:** one dominant color, one or two supporting, one accent; pick by topic, not blue by default.
+- **Safe fonts** (in Office, stable widths): Arial, Calibri, Cambria, Times New Roman.
+- **Breathing room:** margins ≥ 0.5", even gaps; don't fill every corner.
+- **Text must fit** its box: if it overflows, shrink the size, split slides, or enlarge the box.
+- **Native charts** (`add_chart`), not chart images: they stay editable.
 
-- **Una idea por diapositiva.** Título claro + un apoyo visual (imagen, gráfico, ícono o
-  forma). Evita las diapositivas de solo texto y las viñetas interminables.
-- **Jerarquía por tamaño:** título 36–44 pt, subtítulos 20–24 pt, cuerpo 14–18 pt.
-- **Contraste real:** texto oscuro sobre fondo claro o claro sobre oscuro; nada de gris
-  claro sobre crema. Fondos oscuros lucen bien en portada y cierre.
-- **Paleta con intención:** un color dominante, uno o dos de apoyo y un acento; elige según
-  el tema, no azul por defecto. Mantén la misma paleta en todo el mazo.
-- **Fuentes seguras** (presentes en Office y de ancho estable): Arial, Calibri, Cambria,
-  Times New Roman. Empareja una serif para títulos con una sans para el cuerpo si quieres contraste.
-- **Aire:** márgenes ≥ 1.3 cm, espacio uniforme entre bloques; no llenes cada rincón.
-- **Que el texto quepa** en su caja: si desborda, reduce el tamaño, divide en dos
-  diapositivas o agranda el contenedor. Revísalo con `render_diapositivas.py` si tienes LibreOffice.
-- **Gráficos nativos** (`add_chart`), no imágenes de gráficos: quedan editables.
-
-## Editar una presentación existente
+## Edit an existing presentation
 
 ```python
 from pptx import Presentation
-prs = Presentation("existente.pptx")
+prs = Presentation("existing.pptx")
 for slide in prs.slides:
     for shape in slide.shapes:
         if shape.has_text_frame:
             for p in shape.text_frame.paragraphs:
                 for run in p.runs:
-                    if "borrador" in run.text.lower():
-                        run.text = run.text.replace("Borrador", "Final")
-prs.save("modificado.pptx")
+                    if "draft" in run.text.lower():
+                        run.text = run.text.replace("Draft", "Final")
+prs.save("modified.pptx")
 ```
 
-## QA visual (requiere LibreOffice)
+## Visual QA (requires LibreOffice)
 
 ```bash
-python -X utf8 "$SKILL_DIR/scripts/render_diapositivas.py" salida.pptx imgs/ 150
+python -X utf8 "$SKILL_DIR/scripts/render_slides.py" output.pptx images/ 150
 ```
-Genera `imgs/slide-1.png`, etc. Revisa solapes, texto cortado/desbordado, contraste bajo,
-márgenes y alineación. Arregla y re-renderiza solo lo afectado.
+Produces `images/slide-1.png`, etc. Check for overlaps, cut/overflowing text, low contrast,
+margins, and alignment. Fix and re-render only the affected slides.
 
-## Revisión ortográfica (OBLIGATORIA antes de entregar)
+## Proofread (MANDATORY before delivering)
 
-Las presentaciones en español fallan por tildes (`funcion`→`función`,
-`gestion`→`gestión`), mojibake (`posiciAn`) y typos. Antes de terminar:
 ```bash
-python -X utf8 "$SKILL_DIR/scripts/revisar_ortografia.py" salida.pptx
+python -X utf8 "$SKILL_DIR/scripts/spellcheck.py" output.pptx
 ```
-Señala sospechosos por diapositiva y muestra el texto. Corrige, **lee el resto** buscando
-faltas que la heurística no ve, y **regenera** si cambiaste algo.
+Flags suspects per slide and prints the text. Fix, **read the rest**, and **regenerate** if you changed anything.
 
-## Scripts incluidos (todos MIT, correr con `-X utf8`)
+## Bundled scripts (all MIT, run with `-X utf8`)
 
-| Script | Para qué |
-|--------|----------|
-| `extraer_texto.py` | texto por diapositiva (sin dependencias) |
-| `revisar_ortografia.py` | señala posibles faltas y muestra el texto |
-| `render_diapositivas.py` | .pptx → PNG por diapositiva (LibreOffice + PyMuPDF) |
+| Script | Purpose |
+|--------|---------|
+| `extract_text.py` | text per slide (no dependencies) |
+| `spellcheck.py` | flag likely mistakes and show the text |
+| `render_slides.py` | .pptx → PNG per slide (LibreOffice + PyMuPDF) |
 
-## Dependencias (en esta máquina)
+## Dependencies (on this machine)
 
-- **python-pptx** ⚠️ NO instalado — necesario para CREAR/editar: `pip install python-pptx`
-- **PyMuPDF (fitz)** ✅ — usado por `render_diapositivas.py`
-- **LibreOffice (`soffice`)** ⚠️ NO instalado — opcional, solo para QA visual
-- Lectura de texto (`extraer_texto.py`, `revisar_ortografia.py`): **sin dependencias** (stdlib)
+- **python-pptx** ⚠️ NOT installed — needed to CREATE/edit: `pip install python-pptx`
+- **PyMuPDF (fitz)** ✅ — used by `render_slides.py`
+- **LibreOffice (`soffice`)** ⚠️ NOT installed — optional, only for visual QA
+- Text reading (`extract_text.py`, `spellcheck.py`): **no dependencies** (stdlib)
 
-> **Licencia: MIT (ver `LICENSE`).** Skill **independiente**: guía y scripts propios sobre
-> la librería **python-pptx** (MIT) y el estándar abierto **OOXML**. **Nota PyMuPDF (fitz):**
-> AGPL-3.0 / comercial; solo lo usa `render_diapositivas.py`. Para redistribución propietaria,
-> sustitúyelo por Poppler. No deriva de skills propietarias de terceros.
+> **License: MIT (see `LICENSE`).** Independent skill: own guide and scripts on top of the
+> **python-pptx** library (MIT) and the open **OOXML** standard. **PyMuPDF (fitz) note:** AGPL-3.0 /
+> commercial; only `render_slides.py` uses it. For proprietary redistribution, swap it for Poppler.
+> Not derived from proprietary third-party skills.

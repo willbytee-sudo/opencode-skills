@@ -1,191 +1,181 @@
 ---
 name: pdf-mit
 description: >-
-  Úsala SIEMPRE que se quiera hacer algo con archivos PDF: leer o extraer texto/tablas,
-  crear PDFs nuevos, combinar/separar, rotar, marca de agua, cifrar/descifrar, extraer o
-  renderizar imágenes, rellenar formularios y OCR de escaneos. Construida sobre librerías
-  públicas de Python (pypdf, reportlab, pdfplumber, PyMuPDF, pikepdf). Pensada para español
-  (acentos á é í ó ú ñ intactos) sobre opencode en Windows, con revisión ortográfica antes
-  de entregar. Triggers EN: "PDF", ".pdf", "merge PDF", "fill form". NO usar para Word,
-  Excel ni PowerPoint.
+  Use ALWAYS when doing anything with PDF files: reading or extracting text/tables, creating
+  new PDFs, merging/splitting, rotating, watermarking, encrypting/decrypting, extracting or
+  rendering images, filling forms, and OCR of scans. Built on public Python libraries (pypdf,
+  reportlab, pdfplumber, PyMuPDF, pikepdf). Designed for opencode on Windows, with a proofread
+  step before delivering. Triggers: "PDF", ".pdf", "merge PDF", "fill form". Do NOT use for
+  Word, Excel, or PowerPoint.
 metadata:
-  origen: skill independiente (implementación propia, MIT) sobre librerías de terceros de licencia permisiva (pypdf BSD, reportlab BSD, pdfplumber MIT, pikepdf MPL, PyMuPDF AGPL). No deriva de skills propietarias.
-  entorno: opencode en Windows — Python 3.13 + pypdf + reportlab + pdfplumber + PyMuPDF(fitz) + pikepdf + Pillow
-  licencia: MIT (ver LICENSE)
-  regla_critica: correr TODOS los scripts con "python -X utf8"; revisar ortografía antes de entregar
+  origin: independent skill (own implementation, MIT) on top of permissively licensed third-party libraries (pypdf BSD, reportlab BSD, pdfplumber MIT, pikepdf MPL, PyMuPDF AGPL). Not derived from proprietary skills.
+  environment: opencode on Windows — Python 3.13 + pypdf + reportlab + pdfplumber + PyMuPDF(fitz) + pikepdf + Pillow
+  license: MIT (see LICENSE)
+  critical_rule: run ALL scripts with "python -X utf8"; proofread before delivering
 ---
 
-# PDF en opencode — leer, crear, editar, formularios (librerías públicas)
+# PDF on opencode — read, create, edit, forms (public libraries)
 
 ## Overview
 
-Esta skill trabaja PDFs con las librerías estándar de Python: **pypdf** (combinar/separar/
-rotar/cifrar/formularios), **reportlab** (crear), **pdfplumber** (extraer texto/tablas),
-**PyMuPDF/fitz** (renderizar a imagen) y **pikepdf** (reparar/optimizar). Al crear un PDF con
-texto en español, **revisa la ortografía** antes de entregar.
+This skill handles PDFs with the standard Python libraries: **pypdf** (merge/split/rotate/
+encrypt/forms), **reportlab** (create), **pdfplumber** (extract text/tables), **PyMuPDF/fitz**
+(render to image), and **pikepdf** (repair/optimize). When you create a PDF with your own text,
+**proofread** it before delivering.
 
-## Cómo opencode ejecuta esta skill (adaptaciones clave — LEER PRIMERO)
+## How opencode runs this skill (key adaptations — READ FIRST)
 
-1. **`SKILL_DIR` con ruta absoluta.** opencode corre desde el directorio del proyecto:
+1. **`SKILL_DIR` as an absolute path.** opencode runs from the project directory:
    ```bash
    SKILL_DIR="$HOME/.config/opencode/skills/pdf-mit"
    ```
-2. **REGLA UTF-8: corre Python con `-X utf8` SIEMPRE.** Sin ella, los acentos se rompen en Windows (cp1252).
-3. **El texto con acentos NUNCA viaja por la consola.** El `.py` que crea el PDF (reportlab)
-   y los JSON de formularios se escriben con la herramienta de archivos (UTF-8), no con echo/heredocs.
-4. **`extract-text` del sandbox NO existe.** Usa `extraer_texto.py`.
-5. **Faltan en esta máquina (planéalo):** OCR (`pytesseract`, `pdf2image`) y Tesseract NO
-   instalados; Poppler y qpdf NO instalados. Los scripts no los necesitan: la conversión a
-   imagen usa **PyMuPDF**, y la reparación/optimización usa **pikepdf** (no qpdf).
+2. **UTF-8 RULE: run Python with `-X utf8` ALWAYS.** Without it, non-ASCII text breaks on Windows (cp1252).
+3. **Text NEVER travels through the console.** The `.py` that creates the PDF (reportlab) and
+   the form JSON files are written with the file tool (UTF-8), not with echo/here-strings.
+4. **The sandbox `extract-text` does NOT exist.** Use `extract_text.py`.
+5. **Missing on this machine (plan for it):** OCR (`pytesseract`, `pdf2image`) and Tesseract are
+   NOT installed; Poppler and qpdf are NOT installed. The scripts don't need them: image
+   conversion uses **PyMuPDF**, and repair/optimize uses **pikepdf** (not qpdf).
 
-## Leer / extraer texto
+## Read / extract text
 
 ```bash
-python -X utf8 "$SKILL_DIR/scripts/extraer_texto.py" documento.pdf            # texto por página
-python -X utf8 "$SKILL_DIR/scripts/extraer_texto.py" documento.pdf --tablas   # + tablas
+python -X utf8 "$SKILL_DIR/scripts/extract_text.py" document.pdf            # text per page
+python -X utf8 "$SKILL_DIR/scripts/extract_text.py" document.pdf --tables   # + tables
 ```
-En una línea: `python -X utf8 -c "import pdfplumber; print(pdfplumber.open('x.pdf').pages[0].extract_text())"`
 
-## Crear un PDF (reportlab)
+## Create a PDF (reportlab)
 
-Escribe el `.py` con la herramienta de archivos (UTF-8) y córrelo con `python -X utf8`.
-
+Write the `.py` with the file tool (UTF-8) and run it with `python -X utf8`.
 ```python
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 
-doc = SimpleDocTemplate("salida.pdf", pagesize=letter)
+doc = SimpleDocTemplate("output.pdf", pagesize=letter)
 styles = getSampleStyleSheet()
 story = [
-    Paragraph("Informe de gestión 2024", styles["Title"]),
+    Paragraph("Management report 2024", styles["Title"]),
     Spacer(1, 12),
-    Paragraph("El año pasado la organización mejoró su función.", styles["Normal"]),
+    Paragraph("Last year the organization improved its performance.", styles["Normal"]),
     Spacer(1, 12),
-    Table([["Año", "Ingresos"], ["2024", "$1 234"]],
+    Table([["Year", "Revenue"], ["2024", "$1,234"]],
           style=TableStyle([("GRID", (0, 0), (-1, -1), 1, colors.grey),
                             ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey)])),
     PageBreak(),
 ]
 doc.build(story)
 ```
-**Subíndices/superíndices:** NO uses caracteres Unicode (₂, ²) — las fuentes base de reportlab
-no los traen y salen como cuadros negros. Usa el marcado XML: `Paragraph("H<sub>2</sub>O", styles["Normal"])`.
+**Sub/superscripts:** do NOT use Unicode characters (₂, ²) — reportlab base fonts lack those
+glyphs and they render as black boxes. Use XML markup: `Paragraph("H<sub>2</sub>O", styles["Normal"])`.
 
-## Operaciones comunes (pypdf / pikepdf)
+## Common operations (pypdf / pikepdf)
 
 ```python
 from pypdf import PdfReader, PdfWriter
 
-# Combinar
+# Merge
 w = PdfWriter()
 for f in ["a.pdf", "b.pdf"]:
     for pg in PdfReader(f).pages: w.add_page(pg)
-w.write("combinado.pdf")
+w.write("merged.pdf")
 
-# Separar (una página por archivo)
-for i, pg in enumerate(PdfReader("entrada.pdf").pages):
-    o = PdfWriter(); o.add_page(pg); o.write(f"pagina_{i+1}.pdf")
+# Split (one page per file)
+for i, pg in enumerate(PdfReader("input.pdf").pages):
+    o = PdfWriter(); o.add_page(pg); o.write(f"page_{i+1}.pdf")
 
-# Rotar 90°
-r = PdfReader("entrada.pdf"); o = PdfWriter()
-pg = r.pages[0]; pg.rotate(90); o.add_page(pg); o.write("rotado.pdf")
+# Rotate 90°, watermark, encrypt
+r = PdfReader("input.pdf"); o = PdfWriter()
+pg = r.pages[0]; pg.rotate(90); o.add_page(pg); o.write("rotated.pdf")
 
-# Marca de agua
-marca = PdfReader("marca.pdf").pages[0]; o = PdfWriter()
+wm = PdfReader("watermark.pdf").pages[0]; o = PdfWriter()
 for pg in PdfReader("doc.pdf").pages:
-    pg.merge_page(marca); o.add_page(pg)
-o.write("con_marca.pdf")
+    pg.merge_page(wm); o.add_page(pg)
+o.write("watermarked.pdf")
 
-# Cifrar con contraseña
 o = PdfWriter()
 for pg in PdfReader("doc.pdf").pages: o.add_page(pg)
-o.encrypt("clave_usuario", "clave_propietario"); o.write("cifrado.pdf")
+o.encrypt("user_pw", "owner_pw"); o.write("encrypted.pdf")
 ```
-
 ```python
-import pikepdf  # reparar / optimizar / descifrar (reemplaza a qpdf, que no está instalado)
-with pikepdf.open("entrada.pdf") as pdf:
-    pdf.save("optimizado.pdf", linearize=True)
-with pikepdf.open("cifrado.pdf", password="secreto") as pdf:
-    pdf.save("descifrado.pdf")
+import pikepdf  # repair / optimize / decrypt (replaces qpdf, which isn't installed)
+with pikepdf.open("input.pdf") as pdf:
+    pdf.save("optimized.pdf", linearize=True)
+with pikepdf.open("encrypted.pdf", password="secret") as pdf:
+    pdf.save("decrypted.pdf")
 ```
 
-## Renderizar a imagen (revisar visualmente)
+## Render to image (visual review)
 
 ```bash
-python -X utf8 "$SKILL_DIR/scripts/pdf_a_imagenes.py" documento.pdf imagenes/ 200
+python -X utf8 "$SKILL_DIR/scripts/pdf_to_images.py" document.pdf images/ 200
 ```
-Usa PyMuPDF (fitz), sin Poppler. Genera `imagenes/pagina_1.png`, etc.
+Uses PyMuPDF (fitz), no Poppler. Produces `images/page_1.png`, etc.
 
-## Formularios PDF
+## PDF forms
 
-**Rellenables (AcroForm):**
+**Fillable (AcroForm):**
 ```bash
-python -X utf8 "$SKILL_DIR/scripts/rellenar_formulario.py" listar formulario.pdf
-# crea valores.json con la herramienta de archivos: {"nombre": "Israel", "acepta": "/Yes"}
-python -X utf8 "$SKILL_DIR/scripts/rellenar_formulario.py" rellenar formulario.pdf valores.json salida.pdf
+python -X utf8 "$SKILL_DIR/scripts/fill_form.py" list form.pdf
+# write values.json with the file tool: {"name": "Israel", "agree": "/Yes"}
+python -X utf8 "$SKILL_DIR/scripts/fill_form.py" fill form.pdf values.json output.pdf
 ```
 
-**No rellenables (escaneos o PDFs planos):** hay que **superponer texto** sobre las
-coordenadas correctas. Enfoque estándar: (1) renderiza la página a imagen con
-`pdf_a_imagenes.py` para ubicar visualmente dónde va cada dato; (2) crea una capa con
-reportlab (`canvas`) del mismo tamaño de página y dibuja el texto en esas coordenadas
-(origen abajo-izquierda, en puntos); (3) fusiónala con `page.merge_page()` de pypdf:
+**Non-fillable (scans or flat PDFs):** you must **overlay text** at the right coordinates.
+Standard approach: (1) render the page with `pdf_to_images.py` to locate each field; (2) create
+a layer with reportlab (`canvas`) the same page size and draw text at those coordinates (origin
+bottom-left, in points); (3) merge with pypdf's `page.merge_page()`:
 ```python
 from reportlab.pdfgen import canvas
 from pypdf import PdfReader, PdfWriter
 import io
-
 buf = io.BytesIO()
-c = canvas.Canvas(buf, pagesize=(612, 792))   # tamaño de la página destino
+c = canvas.Canvas(buf, pagesize=(612, 792))
 c.setFont("Helvetica", 10); c.drawString(120, 650, "Israel Mosquera"); c.save()
 buf.seek(0)
-capa = PdfReader(buf).pages[0]
-base = PdfReader("plano.pdf"); out = PdfWriter()
-pg = base.pages[0]; pg.merge_page(capa); out.add_page(pg)
-out.write("relleno.pdf")
+layer = PdfReader(buf).pages[0]
+base = PdfReader("flat.pdf"); out = PdfWriter()
+pg = base.pages[0]; pg.merge_page(layer); out.add_page(pg)
+out.write("filled.pdf")
 ```
 
-## OCR de escaneos (requiere instalar)
+## OCR of scans (requires installing)
 
-`pip install pytesseract` + instalar Tesseract y ponerlo en el PATH. Renderiza a imagen con
-`pdf_a_imagenes.py` (o fitz) y pásala a Tesseract con `lang="spa"` (para acentos):
+`pip install pytesseract` + install Tesseract and add it to PATH. Render to image with
+`pdf_to_images.py` and pass it to Tesseract:
 ```python
 import pytesseract
 from PIL import Image
-print(pytesseract.image_to_string(Image.open("imagenes/pagina_1.png"), lang="spa"))
+print(pytesseract.image_to_string(Image.open("images/page_1.png")))
 ```
 
-## Revisión ortográfica (OBLIGATORIA antes de entregar un PDF con texto propio)
+## Proofread (MANDATORY before delivering a PDF with your own text)
 
-Cuando **tú** generas el texto de un PDF (reportlab, superposición), revísalo antes de dar
-por terminado — sobre todo tildes (`funcion`→`función`), terminaciones `-cion`/`-sion` y
-mojibake (`posiciAn`):
+When **you** generate the PDF's text (reportlab, overlay), proofread it before finishing:
 ```bash
-python -X utf8 "$SKILL_DIR/scripts/revisar_ortografia.py" salida.pdf
+python -X utf8 "$SKILL_DIR/scripts/spellcheck.py" output.pdf
 ```
-Señala sospechosos y muestra el texto completo. Corrige, **lee el resto** buscando faltas
-que la heurística no ve, y **regenera** si hiciste cambios. (Para PDFs que solo lees/extraes,
-esta revisión es informativa.)
+It flags suspects (encoding artifacts, doubled words, space before punctuation) and prints the
+full text. Fix, **read the rest**, and **regenerate** if you changed anything. (For PDFs you only
+read/extract, this is informational.)
 
-## Scripts incluidos (todos MIT, correr con `-X utf8`)
+## Bundled scripts (all MIT, run with `-X utf8`)
 
-| Script | Para qué |
-|--------|----------|
-| `extraer_texto.py` | texto (y tablas) por página con pdfplumber |
-| `pdf_a_imagenes.py` | PDF → PNG con PyMuPDF (sin Poppler) |
-| `rellenar_formulario.py` | listar/rellenar formularios AcroForm (pypdf) |
-| `revisar_ortografia.py` | señala posibles faltas ortográficas y muestra el texto |
+| Script | Purpose |
+|--------|---------|
+| `extract_text.py` | text (and tables) per page with pdfplumber |
+| `pdf_to_images.py` | PDF → PNG with PyMuPDF (no Poppler) |
+| `fill_form.py` | list/fill AcroForm forms (pypdf) |
+| `spellcheck.py` | flag likely mistakes and show the text |
 
-## Dependencias (en esta máquina)
+## Dependencies (on this machine)
 
 - **pypdf** ✅ · **reportlab** ✅ · **pdfplumber** ✅ · **PyMuPDF (fitz)** ✅ · **pikepdf** ✅ · **Pillow** ✅
-- **pytesseract + Tesseract** ⚠️ NO instalados — solo para OCR
-- **Poppler / qpdf** ⚠️ NO instalados — no hacen falta (usamos PyMuPDF y pikepdf)
+- **pytesseract + Tesseract** ⚠️ NOT installed — only for OCR
+- **Poppler / qpdf** ⚠️ NOT installed — not needed (we use PyMuPDF and pikepdf)
 
-> **Licencia: MIT (ver `LICENSE`).** Skill **independiente**: guía y scripts propios sobre
-> librerías de terceros de licencia permisiva. **Nota PyMuPDF (fitz):** AGPL-3.0 / comercial;
-> solo lo usa `pdf_a_imagenes.py`. Para redistribución propietaria, sustitúyelo por
-> `pypdfium2` (Apache/BSD) o Poppler. No deriva de skills propietarias de terceros.
+> **License: MIT (see `LICENSE`).** Independent skill: own guide and scripts on top of
+> permissively licensed third-party libraries. **PyMuPDF (fitz) note:** AGPL-3.0 / commercial;
+> only `pdf_to_images.py` uses it. For proprietary redistribution, swap it for `pypdfium2`
+> (Apache/BSD) or Poppler. Not derived from proprietary third-party skills.

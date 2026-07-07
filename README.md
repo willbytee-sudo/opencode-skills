@@ -7,27 +7,34 @@
 > de Office (Word, PDF, PowerPoint, Excel) y un creador de skills, **no necesitas este repo**: usa las que
 > ya vienen con tu herramienta. Clónalo únicamente si tu entorno es opencode.
 
-Skills para [opencode](https://opencode.ai) en Windows, en español. Cada skill vive en su
-carpeta con un `SKILL.md` y sus recursos, y **cada una tiene su propia licencia** (ver la
+Skills para [opencode](https://opencode.ai) en Windows. Cada skill vive en su carpeta con un
+`SKILL.md` **en inglés** (los modelos lo siguen mejor) y un `README.md` **bilingüe** (español +
+inglés) que explica qué hace y cómo se usa. **Cada carpeta tiene su propia licencia** (ver la
 sección "Licencias" más abajo).
 
-## Skills MIT (documentos) — español + inglés
+*opencode skills for Windows. Each skill folder has an English `SKILL.md` (models follow it best)
+plus a bilingual `README.md`.*
+
+## Skills MIT (documentos)
 
 Implementaciones **independientes** para trabajar documentos, escritas desde cero sobre
 librerías públicas de Python y el estándar abierto OOXML. Cada una incluye un paso de
-**revisión ortográfica** que le muestra al modelo posibles faltas (tildes, mojibake tipo
-`posiciAn`, terminaciones `-ción`/`-sión`/`-tión`) antes de entregar. Cada skill tiene su
-versión en **español** (`-mit`) y en **inglés** (`-mit-en`).
+**revisión** (`scripts/spellcheck.py`) que le muestra al modelo posibles faltas (mojibake tipo
+`posiciAn`, palabras duplicadas, espacio antes de puntuación) antes de entregar.
 
 *Independent, from-scratch document skills on top of public Python libraries + the open OOXML
-standard, each with a built-in proofreading step. Available in **Spanish** (`-mit`) and **English** (`-mit-en`).*
+standard, each with a built-in proofreading step.*
 
-| Propósito / Purpose | Español | Inglés / English | Basada en / Based on | Licencia |
-|---------------------|---------|------------------|----------------------|----------|
-| Word (.docx) | [`docx-mit`](docx-mit/) | [`docx-mit-en`](docx-mit-en/) | python-docx | MIT |
-| PDF | [`pdf-mit`](pdf-mit/) | [`pdf-mit-en`](pdf-mit-en/) | pypdf · reportlab · pdfplumber · PyMuPDF · pikepdf | MIT |
-| PowerPoint (.pptx) | [`pptx-mit`](pptx-mit/) | [`pptx-mit-en`](pptx-mit-en/) | python-pptx | MIT |
-| Excel (.xlsx) | [`xlsx-mit`](xlsx-mit/) | [`xlsx-mit-en`](xlsx-mit-en/) | openpyxl | MIT |
+| Propósito / Purpose | Carpeta / Folder | Basada en / Based on | Licencia |
+|---------------------|------------------|----------------------|----------|
+| Word (.docx) | [`docx-mit`](docx-mit/) | python-docx | MIT |
+| PDF | [`pdf-mit`](pdf-mit/) | pypdf · reportlab · pdfplumber · PyMuPDF · pikepdf | MIT |
+| PowerPoint (.pptx) | [`pptx-mit`](pptx-mit/) | python-pptx | MIT |
+| Excel (.xlsx) | [`xlsx-mit`](xlsx-mit/) | openpyxl | MIT |
+
+> Antes cada skill tenía dos carpetas (`-mit` en español y `-mit-en` en inglés). Ahora es **una
+> sola carpeta por skill**: el `SKILL.md` en inglés y el `README.md` en ambos idiomas.
+> *Previously each skill had separate `-mit` / `-mit-en` folders; now there is one folder per skill.*
 
 ## Otras skills
 
@@ -46,17 +53,15 @@ cp -r docx-mit "$HOME/.config/opencode/skills/"
 
 Los scripts se corren **siempre** con `python -X utf8` (en Windows la consola cp1252
 corrompe los acentos si no). Algunas skills piden dependencias extra que se indican en su
-`SKILL.md` (por ejemplo `pip install python-pptx` para `pptx-mit`).
+`SKILL.md` y `README.md` (por ejemplo `pip install python-pptx` para `pptx-mit`).
 
-## Revisión ortográfica
+## Revisión (proofread)
 
-Cada skill MIT trae un revisor: `scripts/revisar_ortografia.py` (versión en español) o
-`scripts/spellcheck.py` (versión en inglés). Extrae el texto del documento y **señala
-sospechosos** —en español: palabras que sin tilde no existen, terminaciones `consonante+ion`
-que deberían llevar tilde y mojibake, respetando plurales (`funciones`), `guion` y lo ya
-acentuado; en inglés: mojibake, palabras duplicadas y espacio antes de puntuación— y luego
-imprime el texto completo para que el modelo lea el resto en busca de faltas que la heurística
-no detecta.
+Cada skill MIT trae `scripts/spellcheck.py`: extrae el texto del documento y **señala
+sospechosos** (mojibake tipo `posiciAn`, palabras duplicadas, espacio antes de puntuación) y
+luego imprime el texto completo para que el modelo lea el resto en busca de faltas que la
+heurística no detecta. Es un paso **obligatorio** antes de entregar cualquier documento con
+texto propio.
 
 ## Licencias
 
